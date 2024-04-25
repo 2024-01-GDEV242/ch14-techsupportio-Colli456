@@ -25,12 +25,13 @@ public class Responder
     private ArrayList<String> defaultResponses;
     // The name of the file containing the default responses.
     private static final String FILE_OF_DEFAULT_RESPONSES = "default.txt";
+    private static final String FILE_OF_RESPONSES = "testing.txt";
     private Random randomGenerator;
 
     /**
      * Construct a Responder
      */
-    public Responder() throws Exception
+    public Responder()
     {
         responseMap = new HashMap<>();
         defaultResponses = new ArrayList<>();
@@ -65,19 +66,57 @@ public class Responder
      * Enter all the known keywords and their associated responses
      * into our response map.
      */
-    //private void fillResponseMap()
-    public static void fillResponseMap() throws Exception
+    private void fillResponseMap()
+    //public static void fillResponseMap() throws Exception
     {
-        File file = new File("C:\\Users\\C.J Clarke\\OneDrive\\Documents\\chapter14\\tech-support-io\\testing.txt");
+        //File file = new File("C:\\Users\\C.J Clarke\\OneDrive\\Documents\\chapter14\\tech-support-io\\testing.txt");
+        //BufferedReader br = new BufferedReader(new FileReader(file));
+        //String st;
+        //while ((st = br.readLine()) != null)
+        //System.out.println(st);
         
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        
-        String st;
-        
-        while ((st = br.readLine()) != null)
-        
-        System.out.println(st);
-        
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(FILE_OF_RESPONSES);
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String key = reader.readLine();
+            String response = reader.readLine();
+            String next = reader.readLine();
+            
+            while(next != null && key != null) {
+                
+                if(next.trim().isEmpty())
+                {
+                    String[] keyArray = key.split(",");
+                    for (String k :keyArray)
+                    {
+                        responseMap.put(k.trim(),response);
+                    }
+                    key = reader.readLine();
+                    response = reader.readLine();
+                    next = reader.readLine();
+                }
+                else if (!next.trim().isEmpty())
+                {
+                    response+= " "+next;
+                    next = reader.readLine();
+                    if (next == null)
+                    {
+                        next = "";
+                    }
+                }
+            }
+        }
+        catch(FileNotFoundException e) {
+            System.err.println("Unable to open " + FILE_OF_RESPONSES);
+        }
+        catch(IOException e) {
+            System.err.println("A problem was encountered reading " +
+                               FILE_OF_RESPONSES);
+        }
+        // Make sure we have at least one response.
+        if(defaultResponses.size() == 0) {
+            defaultResponses.add("Could you elaborate on that?");
+        }
         //responseMap.put("crash", 
         //                "Well, it never crashes on our system. It must have something\n" +
         //                "to do with your system. Tell me more about your configuration.");
@@ -137,8 +176,15 @@ public class Responder
         try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
             String response = reader.readLine();
             while(response != null) {
-                defaultResponses.add(response);
-                response = reader.readLine();
+                if(response.trim().isEmpty())
+                {
+                    response = reader.readLine();
+                }
+                else
+                {
+                    defaultResponses.add(response);
+                    response = reader.readLine();
+                }
             }
         }
         catch(FileNotFoundException e) {
